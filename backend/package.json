@@ -1,0 +1,30 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "A web-based riddle and puzzle game that offers multi-language support (English, Hindi, Hinglish). Users can progress through easy to hard levels, with hints and interactive features, designed using React and Tailwind CSS for a modern and engaging experience.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamabhi0619/RiddleX.git"
+  },
+  "keywords": [
+    "riddle",
+    "webbased-game",
+    "mern"
+  ],
+  "author": "Abhishek Kumar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iamabhi0619/RiddleX/issues"
+  },
+  "homepage": "https://github.com/iamabhi0619/RiddleX#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.8.4"
+  }
+}
