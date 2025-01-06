@@ -1,13 +1,16 @@
 const express = require("express");
+const cors = require('cors')
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const path = require("path");
 const riddlesRoute = require("./routes/riddles");
+const userRoute = require("./routes/user");
 
 dotenv.config();
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -25,6 +28,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 app.use("/api/riddles", riddlesRoute.routes);
+app.use("/api/user", userRoute.routes);
 
 // Server
 const PORT = process.env.PORT || 5000;

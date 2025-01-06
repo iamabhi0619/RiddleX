@@ -1,15 +1,24 @@
+import { Route, Routes } from "react-router-dom";
+import Footer from "./components/Footer";
+import Nav from "./components/Nav";
+import Signup from "./components/Signup";
+import Login from "./components/Login";
+import Forget from "./components/Forget";
+import Main from "./components/Main";
+import Verify from "./components/Verify";
 
 function App() {
   return (
-    <div className="bg-dark-bg h-screen overflow-hidden">
-      <div className="h-full w-full flex flex-col justify-center items-center">
-        <img src="/logo.svg" className="w-72 fill-black" alt="logo"></img>
-        <p className="text-4xl text-dark-text">
-          Welcome to <span className="text-secondaryDark-text">RiddleX</span>
-        </p>
-        <p className="text-3xl text-dark-text">Comming soon..!!</p>
-        <p className="text-gray-400 mt-2">@ 2024 <a href="https://iamabhi.tech/" target="__blank" className="">Abhishek Kumar</a></p>
-      </div>
+    <div className="bg-vibrant-gradient h-screen overflow-hidden">
+      <Nav />
+      <Routes>
+        <Route path="/" element={<Main />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/singup" element={<Signup />} />
+        <Route path="/forget" element={<Forget />} />
+        <Route path="/verify" element={<Verify />} />
+      </Routes>
+      <Footer />
     </div>
   );
 }

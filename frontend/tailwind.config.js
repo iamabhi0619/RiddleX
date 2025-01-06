@@ -4,43 +4,24 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Dark Theme Colors
-        dark: {
-          bg: "#522258", // Deep Purple
-          text: "#FFFFFF", // White Text
-        },
-        secondaryDark: {
-          bg: "#8C3061", // Muted Purple
-          text: "#D95F59", // Coral Text
-        },
-        accentDark: {
-          coral: "#D95F59",
-          muted: "#C63C51",
-        },
-        borderDark: {
-          light: "#C63C51",
-          heavy: "#8C3061",
-        },
-        placeholderDark: "#C63C51",
-
-        // Light Theme Colors
-        light: {
-          bg: "#EAB2A0", // Soft Beige
-          text: "#522258", // Deep Purple Text
-        },
-        secondaryLight: {
-          bg: "#C63C51", // Muted Coral
-          text: "#8C3061", // Muted Purple
-        },
-        accentLight: {
-          coral: "#C63C51",
-          muted: "#8C3061",
-        },
-        borderLight: {
-          light: "#D95F59", // Coral Borders
-          heavy: "#8C3061", // Muted Purple Borders
-        },
-        placeholderLight: "#8C3061", // Placeholder text in light theme
+        primary: "#22577A", // Dark Blue
+        secondary: "#38A3A5", // Teal
+        accent: "#57CC99", // Medium Green
+        light: "#80ED99", // Light Green
+        pale: "#C7F9CC", // Pale Green
+      },
+      backgroundImage: {
+        "light-gradient": "linear-gradient(to bottom, #C7F9CC, #80ED99)",
+        "vibrant-gradient":
+          "linear-gradient(to bottom, #57CC99, #22577A)",
+        "dark-gradient": "linear-gradient(to bottom, #22577A, #38A3A5)",
+        "dark-green-gradient": "linear-gradient(to right, #22577A, #57CC99)",
+      },
+      fontFamily: {
+        fredoka: ['Fredoka', 'sans-serif'],
+        mukta: ['Mukta', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
+        mono: ['Source Code Pro', 'monospace'],
       },
     },
   },

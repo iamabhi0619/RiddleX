@@ -1,8 +1,10 @@
 const express = require("express");
-const { getAll, getUnique } = require("../controllers/riddles");
+const { getUnique, checkAnswer } = require("../controllers/riddles");
+const { protect } = require("../middleware/tokenVerify");
+
 const routes = express.Router();
 
-routes.get("/", getAll);
-routes.get("/unique", getUnique);
+routes.get("/getone", protect, getUnique);
+routes.post("/check", protect, checkAnswer);
 
 exports.routes = routes;

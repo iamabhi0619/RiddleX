@@ -1,0 +1,232 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+function Signup() {
+  const [signupData, setSignupData] = useState({
+    userId: "",
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    gender: "",
+    dpUrl: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [userIdAvailable, setUserIdAvailable] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUserIdAvailability = async () => {
+      if (signupData.userId.length >= 3) {
+        try {
+          const response = await fetch(
+            `/api/checkUserId?userId=${signupData.userId}`
+          );
+          const data = await response.json();
+          setUserIdAvailable(data.isAvailable);
+        } catch (error) {
+          console.error("Error checking userId availability:", error);
+        }
+      }
+    };
+
+    checkUserIdAvailability();
+  }, [signupData.userId]);
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[A-Z]).{8,}$/;
+    if (!passwordPattern.test(signupData.password)) {
+      newErrors.password =
+        "Password must be at least 8 characters, with 1 uppercase and 1 number.";
+    }
+
+    if (signupData.password !== signupData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (!userIdAvailable) {
+      newErrors.userId = "User ID is already taken.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, files } = e.target;
+    setSignupData({
+      ...signupData,
+      [name]: type === "file" ? files[0] : value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        const response = await fetch("/api/user/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(signupData),
+        });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        if (data.userResponse) {
+          navigate("/verify", { state: { email: signupData.email } });
+        }
+      } catch (error) {
+        console.error("Error during signup:", error);
+      }
+    }
+  };
+
+  return (
+    <div className="h-screen w-full flex items-center justify-center z-10">
+      <div className="bg-primary border-[4px] border-secondary rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-light max-w-lg w-full">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col items-center py-4 space-y-2 px-6 text-gray-100 font-poppins"
+        >
+          <h1 className="text-3xl font-fredoka text-light font-semibold tracking-wider">
+            Join our Community
+          </h1>
+
+          {/* UserId Input */}
+          <input
+            className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border   ${
+              errors.userId ? "border-red-500" : "border-secondary"
+            } focus:border-light hover:border-accent placeholder:text-white`}
+            placeholder="User ID"
+            type="text"
+            name="userId"
+            value={signupData.userId}
+            onChange={handleChange}
+            required
+          />
+          {errors.userId && (
+            <p className="text-red-500 text-sm">{errors.userId}</p>
+          )}
+
+          {/* Name Input */}
+          <input
+            className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border   ${
+              errors.name ? "border-red-500" : "border-secondary"
+            } focus:border-light hover:border-accent placeholder:text-white`}
+            placeholder="Full Name"
+            type="text"
+            name="name"
+            value={signupData.name}
+            onChange={handleChange}
+            required
+          />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+
+          {/* Email Input */}
+          <input
+            className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border   ${
+              errors.email ? "border-red-500" : "border-secondary"
+            } focus:border-light hover:border-accent placeholder:text-white`}
+            placeholder="Email"
+            type="email"
+            name="email"
+            value={signupData.email}
+            onChange={handleChange}
+            required
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email}</p>
+          )}
+
+          {/* Password Input */}
+          <input
+            className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border   ${
+              errors.password ? "border-red-500" : "border-secondary"
+            } focus:border-light hover:border-accent placeholder:text-white`}
+            placeholder="Password"
+            type="password"
+            name="password"
+            value={signupData.password}
+            onChange={handleChange}
+            required
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password}</p>
+          )}
+
+          {/* Confirm Password Input */}
+          <input
+            className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border   ${
+              errors.confirmPassword ? "border-red-500" : "border-secondary"
+            } focus:border-light hover:border-accent placeholder:text-white`}
+            placeholder="Confirm Password"
+            type="password"
+            name="confirmPassword"
+            value={signupData.confirmPassword}
+            onChange={handleChange}
+            required
+          />
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+          )}
+          <div className="flex">
+            <select
+              className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border   ${
+                errors.gender ? "border-red-500" : "border-secondary"
+              } focus:border-light hover:border-accent placeholder:text-white`}
+              name="gender"
+              value={signupData.gender}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled className="text-white">
+                Select Gender
+              </option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+            {errors.gender && (
+              <p className="text-red-500 text-sm">{errors.gender}</p>
+            )}
+
+            {/* Profile Picture Upload */}
+            <input
+              className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border border-secondary focus:border-light hover:border-accent placeholder:text-white`}
+              type="file"
+              name="dp"
+              onChange={handleChange}
+              accept="image/*"
+            />
+          </div>
+          {/* Gender Input */}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full p-3 bg-accent rounded-full font-bold text-gray-900 border-[4px] border-light hover:border-primary transition-all duration-300"
+          >
+            Sign Up
+          </button>
+          <p className="text-sm">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-light hover:text-accent transition-all duration-200"
+            >
+              Sign in
+            </Link>
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default Signup;
