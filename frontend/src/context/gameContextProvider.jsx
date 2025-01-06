@@ -19,7 +19,7 @@ const GameProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:5000/api/riddles/getone", {
+      const response = await fetch("/api/riddles/getone", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
