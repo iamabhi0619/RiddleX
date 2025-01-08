@@ -13,29 +13,35 @@ const UserProvider = ({ children }) => {
     JSON.parse(localStorage.getItem("notifications")) || []
   );
 
+  const logout = async () => {
+    setToken(null);
+    setUser(null);
+    localStorage.clear()
+    navigate("/login");
+  };
   useEffect(() => {
     const fetchSession = async () => {
       if (!token) {
-        navigate('/login');
+        navigate("/login");
       } else {
         try {
           const response = await fetch("/api/user/session", {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           });
           if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error("Network response was not ok");
           }
           const data = await response.json();
           setUser(data);
           setScore(data.scores);
-          setAvailableHints(data.availableHints)
+          setAvailableHints(data.availableHints);
         } catch (error) {
-          console.error('There was a problem with the fetch operation:', error);
-          navigate('/login');
+          console.error("There was a problem with the fetch operation:", error);
+          navigate("/login");
         }
       }
     };
@@ -49,8 +55,10 @@ const UserProvider = ({ children }) => {
         user,
         setUser,
         score,
+        logout,
         setScore,
         availableHints,
+        setAvailableHints,
         notifications,
         setNotifications,
       }}

@@ -1,7 +1,8 @@
 import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
-import userContext from "../context/userContext";
 import { useNavigate } from "react-router-dom";
+import userContext from "../context/userContext";
+import { toast } from "react-toastify";
 
 function Login() {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ function Login() {
     password: "",
     remember: true,
   });
+  const [loading, setLoading] = useState(false); // Loading state
+  const [error, setError] = useState(""); // Error state
   const { setToken, setUser } = useContext(userContext);
 
   const handleChange = (e) => {
@@ -19,9 +22,11 @@ function Login() {
       [name]: type === "checkbox" ? checked : value,
     });
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
+    setError(""); // Clear previous errors
+    setLoading(true); // Start loading
     try {
       const response = await fetch("/api/user/login", {
         method: "POST",
@@ -31,18 +36,22 @@ function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
+
       if (response.ok) {
+        toast.success("Login sucessfull..!!")
         setToken(data.token);
         setUser(data.user);
         localStorage.setItem("user", data.token);
-        navigate('/')
+        navigate("/");
       } else {
-        console.error("Login failed:", data);
-        // Handle login failure (e.g., show error message)
+        toast.error(data.message || "Login failed. Please try again.")
+        setError(data.message || "Login failed. Please try again.");
       }
-    } catch (error) {
-      console.error("Error during login:", error);
-      // Handle network or other errors
+    } catch (err) {
+      toast.error("Something went wrong. Please try again later.")
+      setError("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,7 +60,7 @@ function Login() {
       <div className="bg-primary border-[4px] border-secondary rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:border-light max-w-lg w-full">
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col items-center space-y-2 py-12 px-10 text-gray-100 font-poppins"
+          className="flex flex-col items-center space-y-4 py-12 px-10 text-gray-100 font-poppins"
         >
           <img
             src="/assist/LogoWhite.svg"
@@ -61,6 +70,13 @@ function Login() {
           <h1 className="text-3xl font-fredoka text-light">
             Sign in to RiddleX
           </h1>
+
+          {/* Error Message */}
+          {error && (
+            <p className="text-red-500 font-medium text-sm text-center">
+              {error}
+            </p>
+          )}
 
           {/* Email Input */}
           <input
@@ -107,16 +123,21 @@ function Login() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full p-3 bg-accent rounded-full font-bold text-gray-900 border-[4px] border-light hover:border-primary transition-all duration-300"
+            disabled={loading}
+            className={`w-full p-3 ${
+              loading ? "bg-gray-400" : "bg-accent"
+            } rounded-full font-bold text-gray-900 border-[4px] border-light ${
+              loading ? "cursor-not-allowed" : "hover:border-primary"
+            } transition-all duration-300`}
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
 
           {/* Sign-up Redirect */}
           <p className="text-sm">
             Don't have an account?{" "}
             <Link
-              to="/singup"
+              to="/signup"
               className="font-semibold text-light hover:text-accent transition-all duration-200"
             >
               Sign up

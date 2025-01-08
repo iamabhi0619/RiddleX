@@ -38,6 +38,7 @@ exports.login = async (req, res) => {
         },
       });
     }
+    await User.checkAndRenewHints(user._id);
     return res.status(200).json({ user, token });
   } catch (error) {
     return handleErrorResponse(res, error);
@@ -107,8 +108,22 @@ exports.getLeaderBoard = async (req, res) => {
 
 exports.session = async (req, res) => {
   try {
+    await User.checkAndRenewHints(req.user._id);
+    delete req.user.questionHistory;
+    delete req.user.legendaryAchievements;
+    delete req.user.achievements;
     res.status(200).json(req.user);
   } catch (error) {
+    res.status(500).json({ error: "InterNet Server Error" });
+  }
+};
+exports.history = async (req, res) => {
+  try {
+    const history = req.user.questionHistory;
+    history.reverse();
+    res.status(200).send(history);
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ error: "InterNet Server Error" });
   }
 };

@@ -80,30 +80,25 @@ const isFuzzyMatch = (answer, correctAnswer) => {
   const distance = natural.JaroWinklerDistance(answer, correctAnswer);
   return distance >= threshold;
 };
-
 exports.checkAnswer = async (req, res) => {
   try {
     const user = await User.findOne({ userId: req.user.userId });
     if (!user) {
       return res.status(404).send("User not found");
     }
-
-    const { answer } = req.body;
+    const { answer, time } = req.body;
     const normalizedAnswer = normalizeString(answer);
     const transliteratedAnswer = transliterateToLatin(normalizedAnswer);
-
     const riddle = await Riddle.findOne({ questionId: user.currentQuestion });
     if (!riddle) {
       return res.status(404).send("Riddle not found");
     }
-
     // Normalize correct answers for all languages
     const correctAnswers = [
       normalizeString(riddle.answer.English),
       normalizeString(riddle.answer.Hindi),
       normalizeString(riddle.answer.Hinglish),
     ];
-
     // Check for exact match, fuzzy match, or transliterated match
     const isCorrect = correctAnswers.some(
       (correctAnswer) =>
@@ -112,7 +107,6 @@ exports.checkAnswer = async (req, res) => {
         isFuzzyMatch(normalizedAnswer, correctAnswer) ||
         isFuzzyMatch(transliteratedAnswer, correctAnswer)
     );
-
     // Update the user's question history
     const currentQuestion = user.questionHistory.find(
       (question) => question.questionId === user.currentQuestion
@@ -121,19 +115,68 @@ exports.checkAnswer = async (req, res) => {
       currentQuestion.attemptedAnswer = answer;
       currentQuestion.isCorrect = isCorrect;
       currentQuestion.solvedAt = new Date();
+      currentQuestion.timeTakenSeconds = time;
     }
-
     // Update the user's scores
     if (isCorrect) {
       user.scores.totalScore += 10;
       user.currentQuestion = null;
       user.scores.level += 0.2;
     }
-
     await user.save();
+    delete req.user.questionHistory;
+    delete req.user.legendaryAchievements;
+    delete req.user.achievements;
     res.json({ isCorrect, user });
   } catch (error) {
     console.error("Error checking answer:", error.message);
     res.status(500).send("Server Error");
+  }
+};
+
+exports.getHint = async (req, res) => {
+  try {
+    // Fetch user data
+    const user = await User.findOne({ userId: req.user.userId });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Find the current question in the user's history
+    const currentQuestion = user.questionHistory.find(
+      (question) => question.questionId === user.currentQuestion
+    );
+    if (!currentQuestion) {
+      return res.status(400).json({ error: "No current question found" });
+    }
+
+    // Check if hints are available
+    if (user.availableHints <= 0) {
+      return res.status(400).json({ error: "No hints available" });
+    }
+
+    // Fetch the riddle details
+    const riddle = await Riddle.findOne({
+      questionId: currentQuestion.questionId,
+    });
+    if (!riddle || !riddle.hint) {
+      return res.status(404).json({ error: "Hint not found for the riddle" });
+    }
+
+    // Check if the user has already used a hint for this question
+    console.log(currentQuestion);
+
+    if (currentQuestion.hintsUsed >= 1) {
+      return res.status(200).json(riddle.hint);
+    }
+    // Deduct hint and update user's history
+    user.availableHints -= 1;
+    currentQuestion.hintsUsed += 1;
+    // Save the updated user data
+    await user.save();
+    res.status(200).json(riddle.hint);
+  } catch (error) {
+    console.error("Error getting hint:", error);
+    res.status(500).json({ error: "Server error" });
   }
 };

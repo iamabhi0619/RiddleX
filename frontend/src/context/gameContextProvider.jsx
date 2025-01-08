@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useEffect, useContext, useState, useCallback } from "react";
 import gameContext from "./gameContext";
 import userContext from "./userContext";
 
@@ -6,18 +6,27 @@ const GameProvider = ({ children }) => {
   const { token } = useContext(userContext);
   const [question, setQuestion] = useState(null);
   const [celebration, setCelebration] = useState(false);
-  const [questionText, setQuestionText] = useState(null);
+  const [questionText, setQuestionText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [error, setError] = useState(null);
   const [activeLang, setActiveLang] = useState("English");
+  const [hint, setHint] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(() => {
+    const storedTime = localStorage.getItem("time");
+    return storedTime ? parseInt(storedTime, 10) : 0;
+  });
+  const [timer, setTimer] = useState(null);
 
-  const fetchQuestion = async () => {
+  const fetchQuestion = useCallback(async () => {
     if (!token) {
       setError("Authentication token is missing.");
       return;
     }
+
     setLoading(true);
     setError(null);
+
     try {
       const response = await fetch("/api/riddles/getone", {
         method: "GET",
@@ -26,8 +35,15 @@ const GameProvider = ({ children }) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) throw new Error("Failed to fetch question.");
+      if (!response.ok) {
+        throw new Error("Failed to fetch question.");
+      }
       const data = await response.json();
+      const present = localStorage.getItem("Id");
+      if (present != data.questionId) {
+        setElapsedTime(0);
+        localStorage.setItem("Id", data.questionId);
+      }
       setQuestion({
         ...data,
         questionText: {
@@ -41,60 +57,37 @@ const GameProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const submitAnswer = async (answer) => {
-    if (!answer) return { success: false, message: "Answer cannot be empty." };
-    try {
-      const response = await fetch("/api/riddles/check", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ answer }),
-      });
-      if (!response.ok) throw new Error("Failed to check the answer.");
-      const data = await response.json();
-      if (data.isCorrect) {
-        setCelebration(true);
-        fetchQuestion();
-      }
-      return {
-        success: data.isCorrect,
-        message: data.isCorrect ? "Correct!" : "Wrong Answer. Keep guessing!",
-      };
-    } catch (err) {
-      return {
-        success: false,
-        message: err.message || "Error checking the answer.",
-      };
-    }
-  };
-
-  useEffect(() => {
-    if (token) fetchQuestion();
   }, [token]);
 
   useEffect(() => {
+    if (token) fetchQuestion();
+  }, [token, fetchQuestion]);
+
+  useEffect(() => {
     if (question) {
-      if (activeLang === "English") {
-        setQuestionText(
-          question.questionText?.English || "No question available in English"
-        );
-      } else if (activeLang === "Hindi") {
-        setQuestionText(
-          question.questionText?.Hindi || "No question available in Hindi"
-        );
-      } else if (activeLang === "Hinglish") {
-        setQuestionText(
-          question.questionText?.Hinglish || "No question available in Hinglish"
-        );
-      } else {
-        setQuestionText("No question");
-      }
+      const text =
+        question.questionText?.[activeLang] ||
+        `No question available in ${activeLang}`;
+      setQuestionText(text);
     }
   }, [activeLang, question]);
+
+  useEffect(() => {
+    if (question && !question.isSolved) {
+      if (timer) {
+        clearInterval(timer);
+      }
+      const newTimer = setInterval(() => {
+        setElapsedTime((prevTime) => {
+          const updatedTime = prevTime + 1;
+          localStorage.setItem("time", updatedTime);
+          return updatedTime;
+        });
+      }, 1000);
+      setTimer(newTimer);
+      return () => clearInterval(newTimer);
+    }
+  }, [question]);
 
   return (
     <gameContext.Provider
@@ -104,9 +97,14 @@ const GameProvider = ({ children }) => {
         setCelebration,
         activeLang,
         setActiveLang,
+        elapsedTime,
         questionText,
+        hint,
+        setHint,
+        showHistory,
+        setShowHistory,
+        setElapsedTime,
         fetchQuestion,
-        submitAnswer,
         loading,
         error,
       }}

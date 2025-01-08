@@ -5,8 +5,9 @@ import { Link } from "react-router-dom";
 import userContext from "../context/userContext";
 
 function Nav() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useContext(userContext);
+  const [menuOpen, setMenuOpen] = useState(false); // For mobile menu
+  const [profileOpen, setProfileOpen] = useState(false); // For profile dropdown
+  const { user, logout } = useContext(userContext); // Assume `logout` is a function in the context
 
   return (
     <header className="w-full bg-pale font-poppins fixed top-0 z-10 shadow-md">
@@ -26,14 +27,33 @@ function Nav() {
           {!user ? (
             <button className="flex items-center space-x-2 px-4 py-2 bg-light hover:bg-primary hover:text-white rounded-full shadow transition-all duration-300">
               <IoMdLogIn className="text-2xl" />
-              <Link to={"/login"} className="font-medium">
+              <Link to="/login" className="font-medium">
                 Login / Sign Up
               </Link>
             </button>
           ) : (
-            <div className="flex items-center gap-3 text-xl">
-              <img src={user.dpUrl} alt="" className="h-10"/> <p>{user.name}</p>
-              
+            <div className="relative">
+              <div
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => setProfileOpen(!profileOpen)}
+              >
+                <img
+                  src={user.dpUrl}
+                  alt="Profile"
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+                <p className="font-medium text-gray-800">{user.name}</p>
+              </div>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 bg-white border rounded-md shadow-lg">
+                  <button
+                    onClick={logout}
+                    className="block px-4 py-2 w-full text-left text-red-500 hover:bg-gray-100"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </nav>
@@ -53,12 +73,42 @@ function Nav() {
       {menuOpen && (
         <nav className="md:hidden bg-white w-full shadow-md">
           <ul className="flex flex-col items-center space-y-4 py-4">
-            <li>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-light hover:bg-primary text-primary hover:text-white rounded-full shadow transition-all duration-300">
-                <IoMdLogIn className="text-2xl" />
-                <span className="font-medium">Login / Sign Up</span>
-              </button>
-            </li>
+            {!user ? (
+              <li>
+                <button className="flex items-center space-x-2 px-4 py-2 bg-light hover:bg-primary text-primary hover:text-white rounded-full shadow transition-all duration-300">
+                  <IoMdLogIn className="text-2xl" />
+                  <Link to="/login" className="font-medium">
+                    Login / Sign Up
+                  </Link>
+                </button>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <div
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => setProfileOpen(!profileOpen)}
+                  >
+                    <img
+                      src={user.dpUrl}
+                      alt="Profile"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <p className="font-medium text-gray-800">{user.name}</p>
+                  </div>
+                  {profileOpen && (
+                    <div className="bg-white border rounded-md shadow-md mt-2">
+                      <button
+                        onClick={logout}
+                        className="block px-4 py-2 w-full text-left text-red-500 hover:bg-gray-100"
+                      >
+                        Log Out
+                      </button>
+                    </div>
+                  )}
+                </li>
+              </>
+            )}
           </ul>
         </nav>
       )}

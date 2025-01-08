@@ -1,22 +1,24 @@
 import React, { useContext, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import OTPInput from "react-otp-input";
+import { toast } from "react-toastify";
 import userContext from "../context/userContext";
 
 function Verify() {
-  const [otp, setOtp] = useState(null);
-  const [otpError, setOtpError] = useState(null);
+  const [otp, setOtp] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { setToken, setUser } = useContext(userContext);
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
-  console.log(email);
+
   const handleOTPSubmit = async () => {
     if (otp.length !== 6) {
-      setOtpError("OTP must be 6 digits.");
+      toast.error("OTP must be 6 digits.");
       return;
     }
-    setOtpError(null);
+    setIsSubmitting(true);
+
     try {
       const response = await fetch("/api/user/verify", {
         method: "POST",
@@ -26,24 +28,44 @@ function Verify() {
         body: JSON.stringify({ otp, email }),
       });
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Verification failed.");
       }
+
       const data = await response.json();
-      // Handle successful verification
       if (data.token) {
         setToken(data.token);
         localStorage.setItem("user", data.token);
         setUser(data.user);
+        toast.success("Verification successful!");
         navigate("/");
       } else {
-        setOtpError(data.message || "Verification failed. Please try again.");
+        toast.error(data.message || "Verification failed. Please try again.");
       }
     } catch (error) {
-      console.error(
-        "There was a problem with the verification request:",
-        error
-      );
-      setOtpError("There was a problem submitting your OTP. Please try again.");
+      console.error("Error during OTP verification:", error);
+      toast.error(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await fetch("/api/user/resend-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to resend OTP.");
+      }
+      toast.success("OTP resent successfully!");
+    } catch (error) {
+      console.error("Error during OTP resend:", error);
+      toast.error("Failed to resend OTP. Please try again later.");
     }
   };
 
@@ -62,25 +84,27 @@ function Verify() {
               value={otp}
               onChange={setOtp}
               numInputs={6}
-              inputType="number"
+              isInputNum
               renderSeparator={<span className="mx-1 text-light">-</span>}
               renderInput={(props) => <input {...props} />}
               containerStyle="w-full items-center flex justify-center"
               inputStyle="text-center style-none text-4xl border-2 border-secondary rounded-md focus:outline-none focus:border-accent bg-primary text-light"
             />
           </div>
-          {otpError && <p className="text-red-500 text-sm">{otpError}</p>}
-
           <button
             onClick={handleOTPSubmit}
-            className="w-full max-w-xs py-3 bg-accent rounded-lg font-bold text-gray-900 border-[4px] border-light hover:border-primary hover:bg-light hover:text-gray-900 transition-all duration-300"
+            disabled={isSubmitting}
+            className={`w-full max-w-xs py-3 ${
+              isSubmitting ? "bg-gray-500" : "bg-accent hover:bg-light"
+            } rounded-lg font-bold text-gray-900 border-[4px] border-light transition-all duration-300`}
           >
-            Verify OTP
+            {isSubmitting ? "Verifying..." : "Verify OTP"}
           </button>
           <p className="text-sm text-gray-300">
             Didn’t receive the OTP?{" "}
             <button
-              onClick={() => console.log("Resend OTP")}
+              onClick={handleResendOTP}
+              disabled={isSubmitting}
               className="text-accent underline"
             >
               Resend OTP

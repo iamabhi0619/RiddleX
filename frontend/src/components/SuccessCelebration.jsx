@@ -3,10 +3,18 @@ import "tailwindcss/tailwind.css";
 import gameContext from "../context/gameContext";
 
 const SuccessCelebration = () => {
-  const {setCelebration} = useContext(gameContext)
+  const { setCelebration, timer, fetchQuestion } =
+    useContext(gameContext);
+  const handalClose = () => {
+    fetchQuestion();
+    setCelebration(false);
+    clearInterval(timer);
+  };
   return (
-    <div className="flex items-center justify-center h-screen w-screen bg-gray-700 bg-opacity-50 absolute overflow-hidden" onClick={()=>{setCelebration(false)}}>
-      {/* Background Confetti Animation */}
+    <div
+      className="flex items-center justify-center h-screen w-screen bg-gray-700 bg-opacity-50 absolute overflow-hidden"
+      onClick={handalClose}
+    >
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
         {[...Array(50)].map((_, i) => (
           <div

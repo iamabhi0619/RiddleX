@@ -75,16 +75,15 @@ const checkAndRenewHints = async (userId) => {
   if (!user) {
     throw new Error("User not found");
   }
-
   const now = new Date();
   const lastRenewal = new Date(user.lastHintRenewal);
   const hoursSinceLastRenewal = (now - lastRenewal) / (1000 * 60 * 60);
-
   if (hoursSinceLastRenewal >= 24) {
     user.availableHints = 3;
     user.lastHintRenewal = now;
     await user.save();
   }
-
   return user.availableHints;
 };
+
+module.exports.checkAndRenewHints = checkAndRenewHints;
