@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
 function Signup() {
   const [signupData, setSignupData] = useState({
     userId: "",
@@ -12,7 +11,6 @@ function Signup() {
     gender: "",
     dp: null,
   });
-
   const [errors, setErrors] = useState({});
   const [userIdAvailable, setUserIdAvailable] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -43,29 +41,23 @@ function Signup() {
     if (!signupData.name.trim()) {
       newErrors.name = "Name is required.";
     }
-
     if (!/^\S+@\S+\.\S+$/.test(signupData.email)) {
       newErrors.email = "Invalid email address.";
     }
-
     const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[A-Z]).{8,}$/;
     if (!passwordPattern.test(signupData.password)) {
       newErrors.password =
         "Password must be at least 8 characters, with 1 uppercase and 1 number.";
     }
-
     if (signupData.password !== signupData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match.";
     }
-
     if (!signupData.gender) {
       newErrors.gender = "Gender is required.";
     }
-
     if (!userIdAvailable) {
       newErrors.userId = "User ID is already taken.";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

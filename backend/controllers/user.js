@@ -59,6 +59,8 @@ exports.create = async (req, res) => {
     const { userResponse, message } = response.data;
     res.status(201).json({ userResponse, message });
   } catch (error) {
+    console.log(error);
+    
     return handleErrorResponse(res, error);
   }
 };
