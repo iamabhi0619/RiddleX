@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
 function Signup() {
   const [signupData, setSignupData] = useState({
     userId: "",
@@ -9,12 +10,10 @@ function Signup() {
     password: "",
     confirmPassword: "",
     gender: "",
-    dp: null,
   });
   const [errors, setErrors] = useState({});
   const [userIdAvailable, setUserIdAvailable] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [dpPreview, setDpPreview] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,12 +31,12 @@ function Signup() {
       }
     };
 
-    checkUserIdAvailability();
+    const debounceTimeout = setTimeout(checkUserIdAvailability, 500);
+    return () => clearTimeout(debounceTimeout);
   }, [signupData.userId]);
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!signupData.name.trim()) {
       newErrors.name = "Name is required.";
     }
@@ -63,19 +62,11 @@ function Signup() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
-    if (type === "file") {
-      setSignupData({
-        ...signupData,
-        dp: files[0],
-      });
-      setDpPreview(URL.createObjectURL(files[0]));
-    } else {
-      setSignupData({
-        ...signupData,
-        [name]: value,
-      });
-    }
+    const { name, value } = e.target;
+    setSignupData({
+      ...signupData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -83,23 +74,22 @@ function Signup() {
     if (validateForm()) {
       setLoading(true);
       try {
-        const formData = new FormData();
-        Object.entries(signupData).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-
-        const response = await fetch("/api/user/signup", {
+        const response = await fetch("http://localhost:5000/api/user/signup", {
           method: "POST",
-          body: formData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(signupData),
         });
 
         if (!response.ok) {
-          toast.error("Network response was not ok")
+          toast.error("Network response was not ok");
           throw new Error("Network response was not ok");
         }
+
         const data = await response.json();
         if (data.userResponse) {
-          toast.info("Please verify you Email...!!")
+          toast.info("Please verify your email!");
           navigate("/verify", { state: { email: signupData.email } });
         }
       } catch (error) {
@@ -122,7 +112,6 @@ function Signup() {
             Join our Community
           </h1>
 
-          {/* Error Message */}
           {errors.form && (
             <p className="text-red-500 text-sm text-center">{errors.form}</p>
           )}
@@ -226,23 +215,6 @@ function Signup() {
             <p className="text-red-500 text-sm">{errors.gender}</p>
           )}
 
-          {/* Profile Picture Upload */}
-          <input
-            className="w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border border-secondary focus:border-light hover:border-accent placeholder:text-white"
-            type="file"
-            name="dp"
-            onChange={handleChange}
-            accept="image/*"
-          />
-          {dpPreview && (
-            <img
-              src={dpPreview}
-              alt="Profile Preview"
-              className="w-20 h-20 rounded-full mt-2"
-            />
-          )}
-
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}

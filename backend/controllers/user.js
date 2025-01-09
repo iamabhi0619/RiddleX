@@ -60,8 +60,7 @@ exports.create = async (req, res) => {
     res.status(201).json({ userResponse, message });
   } catch (error) {
     console.log(error);
-    
-    return handleErrorResponse(res, error);
+    res.send("Error");
   }
 };
 // Verify handler
