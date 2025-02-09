@@ -24,12 +24,15 @@ mongoose
   });
 
 // Routes
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+
 app.use("/api/riddles", riddlesRoute.routes);
 app.use("/api/user", userRoute.routes);
 
+
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 // Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

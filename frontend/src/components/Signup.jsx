@@ -11,14 +11,17 @@ function Signup() {
     confirmPassword: "",
     gender: "",
   });
+
   const [errors, setErrors] = useState({});
   const [userIdAvailable, setUserIdAvailable] = useState(true);
+  const [checkingUserId, setCheckingUserId] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkUserIdAvailability = async () => {
       if (signupData.userId.length >= 3) {
+        setCheckingUserId(true);
         try {
           const response = await fetch(
             `/api/checkUserId?userId=${signupData.userId}`
@@ -27,6 +30,8 @@ function Signup() {
           setUserIdAvailable(data.isAvailable);
         } catch (error) {
           console.error("Error checking userId availability:", error);
+        } finally {
+          setCheckingUserId(false);
         }
       }
     };
@@ -37,67 +42,58 @@ function Signup() {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!signupData.name.trim()) {
-      newErrors.name = "Name is required.";
-    }
-    if (!/^\S+@\S+\.\S+$/.test(signupData.email)) {
+
+    if (!signupData.name.trim()) newErrors.name = "Name is required.";
+    if (!/^\S+@\S+\.\S+$/.test(signupData.email))
       newErrors.email = "Invalid email address.";
-    }
+    
     const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[A-Z]).{8,}$/;
-    if (!passwordPattern.test(signupData.password)) {
+    if (!passwordPattern.test(signupData.password))
       newErrors.password =
         "Password must be at least 8 characters, with 1 uppercase and 1 number.";
-    }
-    if (signupData.password !== signupData.confirmPassword) {
+
+    if (signupData.password !== signupData.confirmPassword)
       newErrors.confirmPassword = "Passwords do not match.";
-    }
-    if (!signupData.gender) {
-      newErrors.gender = "Gender is required.";
-    }
-    if (!userIdAvailable) {
-      newErrors.userId = "User ID is already taken.";
-    }
+
+    if (!signupData.gender) newErrors.gender = "Gender is required.";
+    if (!userIdAvailable) newErrors.userId = "User ID is already taken.";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setSignupData({
-      ...signupData,
-      [name]: value,
-    });
+    setSignupData({ ...signupData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      setLoading(true);
-      try {
-        const response = await fetch("http://localhost:5000/api/user/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(signupData),
-        });
+    if (!validateForm()) return;
 
-        if (!response.ok) {
-          toast.error("Network response was not ok");
-          throw new Error("Network response was not ok");
-        }
+    setLoading(true);
+    try {
+      const response = await fetch("/api/user/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signupData),
+      });
 
-        const data = await response.json();
-        if (data.userResponse) {
-          toast.info("Please verify your email!");
-          navigate("/verify", { state: { email: signupData.email } });
-        }
-      } catch (error) {
-        console.error("Error during signup:", error);
-        setErrors({ form: "An error occurred. Please try again later." });
-      } finally {
-        setLoading(false);
+      if (!response.ok) throw new Error("Signup request failed");
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`Verification email sent to ${signupData.email}`);
+        navigate("/login");
+      } else {
+        toast.error(data.message || "Signup failed.");
       }
+    } catch (error) {
+      console.error("Signup Error:", error);
+      toast.error("An error occurred. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,7 +112,7 @@ function Signup() {
             <p className="text-red-500 text-sm text-center">{errors.form}</p>
           )}
 
-          {/* UserId Input */}
+          {/* User ID Input */}
           <input
             className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border ${
               errors.userId ? "border-red-500" : "border-secondary"
@@ -128,9 +124,7 @@ function Signup() {
             onChange={handleChange}
             required
           />
-          {errors.userId && (
-            <p className="text-red-500 text-sm">{errors.userId}</p>
-          )}
+          {errors.userId && <p className="text-red-500 text-sm">{errors.userId}</p>}
 
           {/* Name Input */}
           <input
@@ -158,11 +152,9 @@ function Signup() {
             onChange={handleChange}
             required
           />
-          {errors.email && (
-            <p className="text-red-500 text-sm">{errors.email}</p>
-          )}
+          {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
 
-          {/* Password Input */}
+          {/* Password Inputs */}
           <input
             className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border ${
               errors.password ? "border-red-500" : "border-secondary"
@@ -174,11 +166,8 @@ function Signup() {
             onChange={handleChange}
             required
           />
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password}</p>
-          )}
+          {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
 
-          {/* Confirm Password Input */}
           <input
             className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border ${
               errors.confirmPassword ? "border-red-500" : "border-secondary"
@@ -190,48 +179,36 @@ function Signup() {
             onChange={handleChange}
             required
           />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
-          )}
+          {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
 
           {/* Gender Input */}
           <select
             className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border ${
               errors.gender ? "border-red-500" : "border-secondary"
-            } focus:border-light hover:border-accent placeholder:text-white`}
+            } focus:border-light hover:border-accent`}
             name="gender"
             value={signupData.gender}
             onChange={handleChange}
             required
           >
-            <option value="" disabled>
-              Select Gender
-            </option>
+            <option value="" disabled>Select Gender</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
-          {errors.gender && (
-            <p className="text-red-500 text-sm">{errors.gender}</p>
-          )}
+          {errors.gender && <p className="text-red-500 text-sm">{errors.gender}</p>}
 
           <button
             type="submit"
-            disabled={loading}
-            className={`w-full p-3 rounded-full font-bold text-gray-900 border-[4px] transition-all duration-300 ${
-              loading
-                ? "bg-gray-500 border-gray-400 cursor-not-allowed"
-                : "bg-accent border-light hover:border-primary"
-            }`}
+            disabled={loading || checkingUserId}
+            className="w-full p-3 rounded-full font-bold bg-accent border-light hover:border-primary transition-all duration-300"
           >
             {loading ? "Signing Up..." : "Sign Up"}
           </button>
+
           <p className="text-sm">
             Already have an account?{" "}
-            <Link
-              to="/login"
-              className="font-semibold text-light hover:text-accent transition-all duration-200"
-            >
+            <Link to="/login" className="font-semibold text-light hover:text-accent">
               Sign in
             </Link>
           </p>

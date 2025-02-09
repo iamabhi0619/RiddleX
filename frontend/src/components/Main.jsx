@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import GameSection from "./GameSection";
 import ScoreSection from "./ScoreSection";
 import SuccessCelebration from "./SuccessCelebration";

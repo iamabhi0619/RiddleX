@@ -1,6 +1,7 @@
 const axios = require("axios");
 const User = require("../models/user");
-
+const serviceId = "S0003";
+const serviceName = "RiddleX";
 const handleErrorResponse = (res, error) => {
   console.error("Error:", error.message);
   if (error.response) {
@@ -18,19 +19,33 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password are required" });
     }
-    const response = await axios.post(
-      "https://iamabhi.onrender.com/api/users/login",
-      { email, password }
+    // Login Request
+    const response = await axios.post(`${process.env.API_URL}/api/user/login`, {
+      email,
+      password,
+      serviceId,
+      serviceName
+    });
+    const token = response.data.token;
+    // Fetch User Profile
+    const userData = await axios.get(
+      `${process.env.API_URL}/api/user/profile`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
-    const { userResponse, token } = response.data || {};
-    let user = await User.findOne({ userId: userResponse.userId });
+    const userResponse = userData.data || {};
+    // Find or Create User in Local Database
+    let user = await User.findOne({
+      $or: [{ userId: userResponse.userId }, { email: userResponse.email }],
+    });
     if (!user) {
       user = await User.create({
         userId: userResponse.userId,
         name: userResponse.name,
         email: userResponse.email,
         gender: userResponse.gender,
-        dpUrl: userResponse.dpUrl,
+        avatar: userResponse.avatar,
         scores: {
           totalScore: 0,
           level: 1,
@@ -38,7 +53,12 @@ exports.login = async (req, res) => {
         },
       });
     }
-    await User.checkAndRenewHints(user._id);
+    // Check and Renew Hints
+    if (User.checkAndRenewHints) {
+      await User.checkAndRenewHints(user._id);
+    } else {
+      console.warn("checkAndRenewHints method is missing in User model");
+    }
     return res.status(200).json({ user, token });
   } catch (error) {
     return handleErrorResponse(res, error);
@@ -48,37 +68,40 @@ exports.login = async (req, res) => {
 // Signup handler
 exports.create = async (req, res) => {
   try {
-    const { userId, name, email, password, gender, dpUrl } = req.body;
-    if (!userId || !name || !email || !password || !gender) {
+    const { userId, name, email, password, gender } = req.body;
+    if (!name || !email || !password || !gender) {
       return res.status(400).json({ error: "All fields are required" });
     }
+    const user = await User.findOne({ userId });
+    if (user) {
+      res.status(200).json({ message: "Your are alrady an User...!!" });
+    }
     const response = await axios.post(
-      "https://iamabhi.onrender.com/api/users/singup",
-      { userId, name, email, password, gender, dpUrl }
+      `${process.env.API_URL}/api/user/register`,
+      { name, email, password, gender, serviceId, serviceName }
     );
-    const { userResponse, message } = response.data;
-    res.status(201).json({ userResponse, message });
+    if (response.data.success) {
+      res.status(201).json(response.data);
+    }
   } catch (error) {
-    console.log(error);
     res.send("Error");
   }
 };
 // Verify handler
 exports.verify = async (req, res) => {
-  let { otp, email } = req.body;
-  const paylode = { otp: parseInt(otp), email };
   try {
+    const etoken = req.body.token;
     const response = await axios.post(
-      "https://iamabhi.onrender.com/api/users/verify",
-      paylode
+      `${process.env.API_URL}/api/user/verify-email?token=${etoken}`
     );
     const { user, message, token } = response.data;
+
     const newUser = await User.create({
       userId: user.userId,
       name: user.name,
       email: user.email,
       gender: user.gender,
-      dpUrl: user.dpUrl,
+      avatar: user.avatar,
       scores: {
         totalScore: 0,
         level: 1,

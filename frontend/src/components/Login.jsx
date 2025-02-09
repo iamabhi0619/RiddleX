@@ -36,7 +36,6 @@ function Login() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
-
       if (response.ok) {
         toast.success("Login sucessfull..!!")
         setToken(data.token);

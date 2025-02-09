@@ -6,6 +6,7 @@ const {
   verify,
   session,
   history,
+  test,
 } = require("../controllers/user");
 const { protect } = require("../middleware/tokenVerify");
 const routes = express.Router();

@@ -5,8 +5,8 @@ import Signup from "./components/Signup";
 import Login from "./components/Login";
 import Forget from "./components/Forget";
 import Main from "./components/Main";
-import Verify from "./components/Verify";
 import { Slide, ToastContainer } from "react-toastify";
+import EmailVerification from "./components/EmailVerification";
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forget" element={<Forget />} />
-          <Route path="/verify" element={<Verify />} />
+          <Route path="/verify" element={<EmailVerification />} />
         </Routes>
       </div>
       <Footer />

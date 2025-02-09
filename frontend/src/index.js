@@ -7,6 +7,8 @@ import UserProvider from "./context/userContextProvider";
 import GameProvider from "./context/gameContextProvider";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
+
+
 root.render(
   <BrowserRouter>
     <UserProvider>

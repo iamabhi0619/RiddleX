@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     enum: ["male", "female", "other"],
     required: true,
   },
-  dpUrl: {
+  avatar: {
     type: String,
     default: null,
   },
