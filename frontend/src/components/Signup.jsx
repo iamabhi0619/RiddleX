@@ -18,27 +18,27 @@ function Signup() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkUserIdAvailability = async () => {
-      if (signupData.userId.length >= 3) {
-        setCheckingUserId(true);
-        try {
-          const response = await fetch(
-            `/api/checkUserId?userId=${signupData.userId}`
-          );
-          const data = await response.json();
-          setUserIdAvailable(data.isAvailable);
-        } catch (error) {
-          console.error("Error checking userId availability:", error);
-        } finally {
-          setCheckingUserId(false);
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const checkUserIdAvailability = async () => {
+  //     if (signupData.userId.length >= 3) {
+  //       setCheckingUserId(true);
+  //       try {
+  //         const response = await fetch(
+  //           `/api/checkUserId?userId=${signupData.userId}`
+  //         );
+  //         const data = await response.json();
+  //         setUserIdAvailable(data.isAvailable);
+  //       } catch (error) {
+  //         console.error("Error checking userId availability:", error);
+  //       } finally {
+  //         setCheckingUserId(false);
+  //       }
+  //     }
+  //   };
 
-    const debounceTimeout = setTimeout(checkUserIdAvailability, 500);
-    return () => clearTimeout(debounceTimeout);
-  }, [signupData.userId]);
+  //   const debounceTimeout = setTimeout(checkUserIdAvailability, 500);
+  //   return () => clearTimeout(debounceTimeout);
+  // }, [signupData.userId]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -113,7 +113,7 @@ function Signup() {
           )}
 
           {/* User ID Input */}
-          <input
+          {/* <input
             className={`w-full px-3 py-2 font-semibold tracking-wide text-pale bg-primary rounded-md border ${
               errors.userId ? "border-red-500" : "border-secondary"
             } focus:border-light hover:border-accent placeholder:text-white`}
@@ -124,7 +124,7 @@ function Signup() {
             onChange={handleChange}
             required
           />
-          {errors.userId && <p className="text-red-500 text-sm">{errors.userId}</p>}
+          {errors.userId && <p className="text-red-500 text-sm">{errors.userId}</p>} */}
 
           {/* Name Input */}
           <input
